@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getRecentHashes } from '@/lib/appwrite';
+import { getRecentHashes } from '../lib/appwrite';
 
 export default function VaultBrowser({ onClose, onObserve }) {
     const [history, setHistory] = useState([]);

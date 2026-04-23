@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { account } from '@/lib/appwrite';
+import { account } from '../lib/appwrite';
 
 export default function LoginOverlay({ onLogin }) {
     const [email, setEmail] = useState('');

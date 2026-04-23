@@ -9,8 +9,8 @@ import LoginOverlay from './LoginOverlay';
 import VaultBrowser from './VaultBrowser';
 import DiagnosticsOverlay from './DiagnosticsOverlay';
 import HelpModal from './HelpModal';
-import { commitToVault, getRecentHashes, account, resetSessionCache } from '@/lib/appwrite';
-import { startVapiSession, stopVapiSession } from '@/lib/vapi';
+import { commitToVault, getRecentHashes, account, resetSessionCache } from '../lib/appwrite';
+import { startVapiSession, stopVapiSession } from '../lib/vapi';
 
 function generateHash() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

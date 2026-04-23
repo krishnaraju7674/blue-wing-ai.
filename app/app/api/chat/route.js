@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { deployContract, getGasPrice } from '@/lib/web3';
+import { deployContract, getGasPrice } from '../../../lib/web3';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
