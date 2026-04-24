@@ -152,8 +152,12 @@ export default function BlueWingApp() {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length === 0) return;
       
-      const preferredVoice = voices.find(v => v.lang === language || v.lang.startsWith(language.split('-')[0])) || voices[0];
-      if (preferredVoice) utterance.voice = preferredVoice;
+      // JARVIS Voice Protocol: Prefer British English (Google UK English Male / Daniel / Arthur)
+      const jarvisVoice = voices.find(v => v.lang === 'en-GB' || v.name.includes('UK') || v.name.includes('British')) || 
+                        voices.find(v => v.lang === language || v.lang.startsWith(language.split('-')[0])) || 
+                        voices[0];
+      
+      if (jarvisVoice) utterance.voice = jarvisVoice;
       
       try {
         window.speechSynthesis.speak(utterance);
