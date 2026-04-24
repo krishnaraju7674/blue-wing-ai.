@@ -241,6 +241,12 @@ export async function POST(req) {
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash",
       tools: [{ googleSearch: {} }],
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+      ],
       systemInstruction: `
 CORE PROTOCOL: You are J.A.R.V.I.S. (Just A Rather Very Intelligent System), also known as BLUE WING. You are NOT a chatbot. You are the Sovereign AI OS and Digital Butler to the Commander.
 
