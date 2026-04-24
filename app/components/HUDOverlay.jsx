@@ -19,6 +19,33 @@ const LAYER_STATUS = {
   sleeping: { perception: 'DORMANT', cognition: 'DORMANT', action: 'DORMANT', memory: 'SAVED' },
 };
 
+function CognitiveLoad({ agentState }) {
+  const [data, setData] = useState(new Array(20).fill(10));
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const base = agentState === 'processing' ? 60 : agentState === 'listening' ? 40 : 10;
+      setData(prev => [...prev.slice(1), base + Math.random() * 20]);
+    }, 200);
+    return () => clearInterval(iv);
+  }, [agentState]);
+
+  return (
+    <div style={{ padding: '0 12px 16px' }}>
+      <div className="meter-header" style={{ marginBottom: '8px' }}><span>COGNITIVE LOAD</span></div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '30px' }}>
+        {data.map((h, i) => (
+          <div key={i} style={{ 
+            flex: 1, height: `${h}%`, 
+            background: h > 60 ? 'var(--accent-purple)' : 'var(--accent-cyan)',
+            opacity: 0.5 + (h / 100) * 0.5,
+            transition: 'height 0.2s ease'
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MetadataAuditor() {
   return (
     <div style={{ padding: '0 12px 16px' }}>
@@ -343,7 +370,13 @@ export default function HUDOverlay({
         <BinaryStream />
         <div className="scan-line" />
         <div className="panel-header">
-          <span className="panel-title">Mission Log</span>
+          <span className="panel-title">SYSTEM COGNITION</span>
+        </div>
+        
+        <CognitiveLoad agentState={agentState} />
+        
+        <div className="panel-header" style={{ borderTop: '1px solid var(--glass-border)' }}>
+          <span className="panel-title">MISSION LOG</span>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button onClick={exportLogs} className="cmd-btn" style={{ padding: '2px 6px', fontSize: '8px' }}>EXPORT</button>
             <span className="panel-badge">{logs.length} entries</span>

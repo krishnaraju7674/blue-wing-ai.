@@ -284,14 +284,17 @@ function ArcReactor({ agentState, isSpeaking, isAlert }) {
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
+    const rotationMult = isAlert ? 8 : agentState === 'processing' ? 4 : agentState === 'listening' ? 2.5 : 1;
+    const pulseSpeed = isAlert ? 15 : agentState === 'processing' ? 10 : 1.2;
+    
     if (groupRef.current) {
-      groupRef.current.rotation.z = time * 0.3;
+      groupRef.current.rotation.z = time * 0.3 * rotationMult;
     }
     if (innerRef.current) {
-      innerRef.current.rotation.z = -time * 0.5;
+      innerRef.current.rotation.z = -time * 0.5 * rotationMult;
     }
     if (coreRef.current) {
-      const s = 1 + Math.sin(time * 1.2) * 0.02 + (isSpeaking ? Math.sin(time * 8) * 0.02 : 0);
+      const s = 1 + Math.sin(time * pulseSpeed) * (isAlert ? 0.08 : 0.02) + (isSpeaking ? Math.sin(time * 12) * 0.03 : 0);
       coreRef.current.scale.set(s, s, s);
     }
   });

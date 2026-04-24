@@ -112,8 +112,40 @@ export default function BlueWingApp() {
     };
   }, []);
 
+  const playSound = (type) => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      if (type === 'command') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
+      } else if (type === 'response') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+      } else if (type === 'alert') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.2);
+      }
+      
+      gain.gain.setValueAtTime(0.02, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    } catch (e) {}
+  };
+
   const speak = (text) => {
-    if (!window.speechSynthesis || !text) return;
+    if (!text) return;
+    playSound('response');
+    if (!window.speechSynthesis) return;
 
     // If user hasn't interacted yet, queue the speech for later
     if (!hasInteractedRef.current) {
@@ -181,6 +213,7 @@ export default function BlueWingApp() {
 
   const handleCommand = useCallback(async (cmd) => {
     if (!cmd) return;
+    playSound('command');
     
     // Proactive Voice Unlock (ensure speech is active for autonomous reporting)
     if (!isSpeaking && window.speechSynthesis.paused) window.speechSynthesis.resume();
