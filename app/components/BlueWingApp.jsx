@@ -53,6 +53,7 @@ export default function BlueWingApp() {
   const [liveTranscript, setLiveTranscript] = useState('');
   const [isSeeThrough, setIsSeeThrough] = useState(false);
   const recognitionRef = useRef(null);
+  const lastVoiceRequestRef = useRef(0);
   const notifyRef = useRef(null);
 
   const now = () => new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -576,8 +577,12 @@ export default function BlueWingApp() {
               time: now() 
             }, ...prev].slice(0, 30));
             
-            // Process the command
-            handleCommand(transcript);
+            // Process the command (with rate-limit protection)
+            const nowTime = Date.now();
+            if (transcript.length > 1 && (nowTime - lastVoiceRequestRef.current > 2000)) {
+              lastVoiceRequestRef.current = nowTime;
+              handleCommand(transcript);
+            }
           }
         } else {
           // Show interim (live) transcript
