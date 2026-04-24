@@ -4,6 +4,12 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
+const SCRIPTS = {
+  'demo': 'start notepad && timeout /t 2 && start calc && timeout /t 2 && start mspaint',
+  'productivity': 'start chrome "https://gmail.com" && start chrome "https://calendar.google.com" && start code',
+  'secure': 'taskkill /IM chrome.exe /F && taskkill /IM notepad.exe /F && start powershell',
+};
+
 function hash() {
   return `BW-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
 }
@@ -370,8 +376,8 @@ export async function POST(req) {
     }
 
     // 4. Web Fallback
-    if (WEBS[t] && !isClose) {
-      return NextResponse.json({ text: `Directing to ${t.toUpperCase()}, Sir.`, hash: hash(), success: true, type: 'web', url: WEBS[t] });
+    if (WEB_APPS[t] && !isClose) {
+      return NextResponse.json({ text: `Directing to ${t.toUpperCase()}, Sir.`, hash: hash(), success: true, type: 'web', url: WEB_APPS[t] });
     }
 
     // 5. Direct Execution Fallback (God Mode)
