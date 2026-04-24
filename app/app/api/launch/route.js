@@ -159,6 +159,11 @@ const APPS = {
   'user accounts': { open: 'start netplwiz', name: 'User Accounts' },
   'date and time': { open: 'start timedate.cpl', name: 'Date and Time' },
   'system properties': { open: 'start sysdm.cpl', name: 'System Properties' },
+  // Keyboard Control
+  'keyboard': { open: 'powershell -c "$obj = New-Object -ComObject WScript.Shell; $obj.SendKeys(\'{KEYS}\')"', name: 'Keyboard Input' },
+  // Chrome Tabs
+  'new tab': { open: 'start chrome', name: 'New Chrome Tab' },
+  'google search': { open: 'start chrome "https://www.google.com/search?q={QUERY}"', name: 'Google Search' },
 };
 
 const WEB_APPS = {
@@ -358,51 +363,41 @@ export async function POST(req) {
 
     // ── OPEN action ──
     // Check local apps
-    const app = APPS[key];
+    let app = APPS[key];
+    
+    // Dynamic placeholder replacement (for search/keys)
+    let cmdToRun = '';
     if (app) {
-      return new Promise((resolve) => {
-        // Use shell: true and process.cwd() for better compatibility
-        exec(app.open, { windowsHide: false, shell: true, cwd: process.cwd() }, (error) => {
-          if (error) {
-            console.error(`Blue Wing: Launch failed for ${key} (${app.open}):`, error.message);
-            // Fallback to web app if local fails
-            const webFallback = WEB_APPS[key];
-            if (webFallback) {
-              return resolve(NextResponse.json({ 
-                text: `${app.name} desktop not found. Opening web version.`, 
-                hash: hash(), type: 'web', url: webFallback, success: true 
-              }));
-            }
-          }
-          resolve(NextResponse.json({
-            text: error ? `${app.name} not detected. Try "open ${key} web".` : `${app.name} opened.`,
-            hash: hash(), type: 'local', success: !error
-          }));
-        });
-      });
+      cmdToRun = app.open;
+      if (cmdToRun.includes('{QUERY}') || cmdToRun.includes('{KEYS}')) {
+        const payload = key.split(' ').slice(1).join(' ') || '...';
+        cmdToRun = cmdToRun.replace('{QUERY}', encodeURIComponent(payload)).replace('{KEYS}', payload);
+      }
+    } else {
+      // FULL ACCESS: Try running the key as a direct system command
+      cmdToRun = `start ${key}`;
+      app = { name: key };
     }
 
-    // Check web apps
-    const webUrl = WEB_APPS[key];
-    if (webUrl) {
-      const name = key.charAt(0).toUpperCase() + key.slice(1);
-      return NextResponse.json({ text: `Opening ${name}.`, hash: hash(), type: 'web', url: webUrl, success: true });
-    }
-
-    // Raw URL
-    if (key.startsWith('http') || key.includes('.com') || key.includes('.org') || key.includes('.io') || key.includes('.in') || key.includes('.net')) {
-      const url = key.startsWith('http') ? key : `https://${key}`;
-      return NextResponse.json({ text: `Opening ${url}.`, hash: hash(), type: 'web', url, success: true });
-    }
-
-    // Try system launch
     return new Promise((resolve) => {
-      exec(`start ${key}`, { windowsHide: false, shell: true, cwd: process.cwd() }, (error) => {
+      exec(cmdToRun, { windowsHide: false, shell: true, cwd: process.cwd() }, (error) => {
         if (error) {
-          console.error(`Blue Wing: System launch failed for ${key}:`, error.message);
-          resolve(NextResponse.json({ text: `"${key}" not found in system path.`, hash: hash(), type: 'error', success: false }));
+          console.error(`Blue Wing: Launch failed for ${key} (${cmdToRun}):`, error.message);
+          // Fallback to web app if local fails
+          const webFallback = WEB_APPS[key];
+          if (webFallback) {
+            return resolve(NextResponse.json({ 
+              text: `${app.name} desktop not found. Opening web version.`, 
+              hash: hash(), type: 'web', url: webFallback, success: true 
+            }));
+          }
+          // If even fallback fails, return error
+          resolve(NextResponse.json({ text: `Authority failed to locate "${key}".`, hash: hash(), type: 'error', success: false }));
         } else {
-          resolve(NextResponse.json({ text: `${key} launched.`, hash: hash(), type: 'local', success: true }));
+          resolve(NextResponse.json({
+            text: `${app.name} authorized and active.`,
+            hash: hash(), type: 'local', success: true
+          }));
         }
       });
     });

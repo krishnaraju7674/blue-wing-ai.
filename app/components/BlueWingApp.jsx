@@ -614,6 +614,7 @@ export default function BlueWingApp() {
     recognition.onend = () => {
       // Auto-restart if still in listening mode (continuous listening)
       if (isListening && recognitionRef.current) {
+        console.log("Blue Wing: Restarting perception layer (Keep-Alive)...");
         try {
           recognitionRef.current.start();
         } catch (e) {
@@ -625,7 +626,20 @@ export default function BlueWingApp() {
       }
     };
 
-    recognitionRef.current = recognition;
+    // Keep-Alive interval (force restart every 5 mins to prevent browser timeout)
+    const keepAlive = setInterval(() => {
+      if (isListening && recognitionRef.current) {
+        try {
+          recognitionRef.current.stop(); // onend will trigger restart
+        } catch (e) {}
+      }
+    }, 300000); // 5 minutes
+
+    recognitionRef.current = { 
+      start: () => recognition.start(), 
+      stop: () => { clearInterval(keepAlive); recognition.stop(); },
+      onend: null 
+    };
     
     try {
       recognition.start();
@@ -634,6 +648,8 @@ export default function BlueWingApp() {
       setIsListening(false);
       notifyRef.current?.add('Voice Error', 'Could not start microphone.', 'error');
     }
+    
+    return () => clearInterval(keepAlive);
   }, [isListening, handleCommand, agentState, language]);
 
   // Keyboard Shortcuts
