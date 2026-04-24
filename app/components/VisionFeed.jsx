@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 
-export default function VisionFeed({ onAnalyze }) {
+export default function VisionFeed({ onAnalyze, isSeeThrough }) {
   const videoRef = useRef(null);
   const [active, setActive] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -73,7 +73,7 @@ export default function VisionFeed({ onAnalyze }) {
   }, [active]);
 
   return (
-    <div className="glass-panel" style={{ height: '220px', marginBottom: '12px', position: 'relative' }}>
+    <div className={`vision-feed-panel glass-panel ${isSeeThrough ? 'is-see-through' : ''}`} style={{ height: '220px', marginBottom: '12px', position: 'relative' }}>
       <div className="scan-line" />
       <div className="panel-header">
         <span className="panel-title">Vision Feed</span>

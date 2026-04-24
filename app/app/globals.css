@@ -262,6 +262,46 @@ html, body {
   }
 }
 
+/* ── See Through (AR) Mode ── */
+.app-container.see-through {
+  background: black;
+}
+
+.app-container.see-through .vision-feed-panel.is-see-through {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh !important;
+  z-index: 0;
+  margin: 0 !important;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.app-container.see-through .vision-feed-panel.is-see-through video {
+  height: 100vh !important;
+  opacity: 0.6; /* Balanced for readability and immersion */
+}
+
+.app-container.see-through .hud-grid,
+.app-container.see-through .canvas-wrapper {
+  pointer-events: none;
+}
+
+.app-container.see-through .canvas-wrapper {
+  z-index: 10; /* Keep 3D core above camera */
+}
+
+.app-container.see-through .hud-overlay {
+  z-index: 20;
+}
+
+.app-container.see-through .glass-panel:not(.vision-feed-panel) {
+  background: rgba(8, 14, 40, 0.4);
+  backdrop-filter: blur(5px);
+}
+
 
 /* ── Top Bar ── */
 .top-bar {

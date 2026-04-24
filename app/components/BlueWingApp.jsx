@@ -51,6 +51,7 @@ export default function BlueWingApp() {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState('');
+  const [isSeeThrough, setIsSeeThrough] = useState(false);
   const recognitionRef = useRef(null);
   const notifyRef = useRef(null);
 
@@ -709,7 +710,7 @@ export default function BlueWingApp() {
   };
 
   return (
-    <div className={`app-container ${agentState === 'sleeping' ? 'sleeping' : ''} ${godMode ? 'god-mode' : ''} ${isAlert ? 'alert-mode' : ''}`}>
+    <div className={`app-container ${agentState === 'sleeping' ? 'sleeping' : ''} ${godMode ? 'god-mode' : ''} ${isAlert ? 'alert-mode' : ''} ${isSeeThrough ? 'see-through' : ''}`}>
       {!isAuthenticated && <LoginOverlay onLogin={() => setIsAuthenticated(true)} />}
       {showVault && <VaultBrowser onClose={() => setShowVault(false)} onObserve={handleObserve} />}
       {showDiagnostics && <DiagnosticsOverlay onComplete={() => setShowDiagnostics(false)} />}
@@ -721,7 +722,7 @@ export default function BlueWingApp() {
           camera={{ position: [0, 0, 6], fov: 50 }}
           dpr={[1, 2]}
           gl={{ antialias: true, alpha: false }}
-          style={{ background: godMode ? '#0a0a05' : isAlert ? '#080000' : '#030612' }}
+          style={{ background: isSeeThrough ? 'transparent' : (godMode ? '#0a0a05' : isAlert ? '#080000' : '#030612') }}
         >
           <Scene3D agentState={agentState} isSpeaking={isSpeaking} godMode={godMode} isAlert={isAlert} />
         </Canvas>
@@ -735,6 +736,8 @@ export default function BlueWingApp() {
         liveTranscript={liveTranscript}
         godMode={godMode}
         isAlert={isAlert}
+        isSeeThrough={isSeeThrough}
+        onToggleSeeThrough={() => setIsSeeThrough(!isSeeThrough)}
         onCommand={handleCommand}
         onToggleVoice={toggleVoice}
         onToggleVault={() => setShowVault(true)}

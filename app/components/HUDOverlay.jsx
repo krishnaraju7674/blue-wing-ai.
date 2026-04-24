@@ -241,7 +241,11 @@ function Clock() {
   );
 }
 
-export default function HUDOverlay({ agentState, logs, response, isListening, isSpeaking, liveTranscript, godMode, isAlert, onCommand, onToggleVoice, onToggleVault, onToggleHelp }) {
+export default function HUDOverlay({ 
+  agentState, logs, response, isListening, isSpeaking, liveTranscript, 
+  godMode, isAlert, isSeeThrough, onToggleSeeThrough, onCommand, 
+  onToggleVoice, onToggleVault, onToggleHelp 
+}) {
   const [input, setInput] = useState('');
   const [metrics] = useState({ cpu: 34, mem: 52, net: 87 });
   const [showSeal, setShowSeal] = useState(false);
@@ -317,6 +321,13 @@ export default function HUDOverlay({ agentState, logs, response, isListening, is
             >
               SYSTEMS
             </button>
+            <button 
+              onClick={onToggleSeeThrough} 
+              className={`mobile-nav-btn ${isSeeThrough ? 'active' : ''}`}
+              style={{ borderColor: isSeeThrough ? 'var(--accent-green)' : '' }}
+            >
+              {isSeeThrough ? 'OPTICS ON' : 'OPTICS OFF'}
+            </button>
           </div>
 
           <div className="top-bar-controls">
@@ -380,7 +391,7 @@ export default function HUDOverlay({ agentState, logs, response, isListening, is
 
       {/* ── Right Sidebar ── */}
       <div className={`right-sidebar ${mobilePanel === 'systems' ? 'mobile-visible' : ''}`}>
-        <VisionFeed onAnalyze={onCommand} />
+        <VisionFeed onAnalyze={onCommand} isSeeThrough={isSeeThrough} />
 
         {/* Multi-Agent Cluster Status */}
         {agentState === 'split' && (
