@@ -840,6 +840,54 @@ body:has(.see-through) {
   96% { opacity: 1; }
 }
 
+/* ── Mobile Navigation Bar ── */
+.mobile-nav-bar {
+  display: none;
+  position: absolute;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 96%;
+  height: 48px;
+  background: rgba(10, 15, 30, 0.95);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  border-radius: 4px;
+  z-index: 1000;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 8px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 900px) {
+  .mobile-nav-bar {
+    display: flex;
+  }
+}
+
+.nav-item {
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-item.active {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 10px var(--accent-cyan);
+}
+
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.8; box-shadow: 0 0 5px var(--accent-cyan); }
   50% { opacity: 1; box-shadow: 0 0 20px var(--accent-cyan); }

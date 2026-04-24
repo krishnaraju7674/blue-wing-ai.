@@ -604,6 +604,13 @@ export default function HUDOverlay({
             </span>
           )}
         </form>
+
+        {/* ── Mobile Navigation Bar ── */}
+        <div className="mobile-nav-bar glass-panel">
+          <button className={`nav-item ${mobilePanel === 'logs' ? 'active' : ''}`} onClick={() => setMobilePanel('logs')}>LOGS</button>
+          <button className={`nav-item ${mobilePanel === 'core' ? 'active' : ''}`} onClick={() => setMobilePanel('core')}>CORE</button>
+          <button className={`nav-item ${mobilePanel === 'systems' ? 'active' : ''}`} onClick={() => setMobilePanel('systems')}>SYSTEMS</button>
+        </div>
       </div>
     </div>
   );

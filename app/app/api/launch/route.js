@@ -328,76 +328,39 @@ const WEB_APPS = {
 
 export async function POST(req) {
   try {
-    const { target, action = 'open' } = await req.json();
-    const key = (target || '').toLowerCase().trim();
+    const { target, action } = await req.json();
+    const t = target?.toLowerCase().trim();
+    const isClose = action === 'close';
 
-    if (!key) {
-      return NextResponse.json({ text: "Specify an app.", hash: hash(), type: 'error', success: false });
-    }
-
-    // ── CLOSE action ──
-    if (action === 'close') {
-      const app = APPS[key];
-      if (app && app.close) {
-        return new Promise((resolve) => {
-          exec(app.close, { windowsHide: true, shell: true }, (error) => {
-            if (error) console.warn(`Blue Wing: Close failed for ${key}:`, error.message);
-            resolve(NextResponse.json({
-              text: error ? `${app.name} not found.` : `${app.name} closed.`,
-              hash: hash(), type: 'local', success: !error
-            }));
-          });
-        });
-      }
-      // Try generic kill
-      return new Promise((resolve) => {
-        exec(`taskkill /IM "${key}.exe" /F`, { windowsHide: true, shell: true }, (error) => {
-          if (error) console.warn(`Blue Wing: Generic close failed for ${key}:`, error.message);
-          resolve(NextResponse.json({
-            text: error ? `Not found.` : `${key} closed.`,
-            hash: hash(), type: 'local', success: !error
-          }));
-        });
+    // 1. Check Scripts first (Multi-step automation)
+    if (SCRIPTS[t] && !isClose) {
+      await execAsync(SCRIPTS[t]);
+      return NextResponse.json({ 
+        text: `Executing ${t.toUpperCase()} protocol. Systems responding, Sir.`, 
+        hash: hash(), success: true 
       });
     }
 
-    // ── OPEN action ──
-    // Check local apps
-    let app = APPS[key];
-    
-    // Dynamic placeholder replacement (for search/keys)
-    let cmdToRun = '';
-    if (app) {
-      cmdToRun = app.open;
-      if (cmdToRun.includes('{QUERY}') || cmdToRun.includes('{KEYS}')) {
-        const payload = key.split(' ').slice(1).join(' ') || '...';
-        cmdToRun = cmdToRun.replace('{QUERY}', encodeURIComponent(payload)).replace('{KEYS}', payload);
+    // 2. Check Keyboard commands
+    if (t?.startsWith('keyboard')) {
+      const key = t.replace('keyboard', '').trim();
+      let psCommand = '';
+      if (key === 'alt+tab') psCommand = '%{TAB}';
+      else if (key === 'enter') psCommand = '{ENTER}';
+      else if (key === 'space') psCommand = ' ';
+      else if (key === 'win+d') psCommand = '#d';
+      else if (key === 'alt+f4') psCommand = '%{F4}';
+      
+      if (psCommand) {
+        const fullCmd = `powershell -Command "$wshell = New-Object -ComObject WScript.Shell; $wshell.SendKeys('${psCommand}')"`;
+        await execAsync(fullCmd);
+        return NextResponse.json({ text: `Simulated ${key.toUpperCase()}, Sir.`, hash: hash(), success: true });
       }
-    } else {
-      // FULL ACCESS: Try running the key as a direct system command
-      cmdToRun = `start ${key}`;
-      app = { name: key };
     }
 
-    return new Promise((resolve) => {
-      exec(cmdToRun, { windowsHide: false, shell: true, cwd: process.cwd() }, (error) => {
-        if (error) {
-          console.error(`Blue Wing: Launch failed for ${key} (${cmdToRun}):`, error.message);
-          // Fallback to web app if local fails
-          const webFallback = WEB_APPS[key];
-          if (webFallback) {
-            return resolve(NextResponse.json({ 
-              text: `${app.name} desktop not found. Opening web version.`, 
-              hash: hash(), type: 'web', url: webFallback, success: true 
-            }));
-          }
-          // If even fallback fails, return error
-          resolve(NextResponse.json({ text: `Authority failed to locate "${key}".`, hash: hash(), type: 'error', success: false }));
-        } else {
-          resolve(NextResponse.json({
-            text: `${app.name} authorized and active.`,
-            hash: hash(), type: 'local', success: true
-          }));
+    // 3. Check App Registry
+    const app = APPS[t];
+    if (app) {
       const cmd = isClose ? (app.close || `taskkill /IM ${t}.exe /F`) : app.open;
       await execAsync(cmd);
       return NextResponse.json({ 
@@ -427,3 +390,5 @@ export async function POST(req) {
     return NextResponse.json({ text: `Communication failure: ${error.message}`, hash: hash(), success: false });
   }
 }
+
+
