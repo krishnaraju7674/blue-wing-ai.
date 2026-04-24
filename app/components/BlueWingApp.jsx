@@ -52,6 +52,7 @@ export default function BlueWingApp() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState('');
   const [isSeeThrough, setIsSeeThrough] = useState(false);
+  const [autoScan, setAutoScan] = useState(false);
   const recognitionRef = useRef(null);
   const lastVoiceRequestRef = useRef(0);
   const notifyRef = useRef(null);
@@ -759,6 +760,8 @@ export default function BlueWingApp() {
         isAlert={isAlert}
         isSeeThrough={isSeeThrough}
         onToggleSeeThrough={() => setIsSeeThrough(!isSeeThrough)}
+        autoScan={autoScan}
+        onToggleAutoScan={() => setAutoScan(!autoScan)}
         onCommand={handleCommand}
         onToggleVoice={toggleVoice}
         onToggleVault={() => setShowVault(true)}

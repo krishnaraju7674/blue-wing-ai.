@@ -243,7 +243,7 @@ function Clock() {
 
 export default function HUDOverlay({ 
   agentState, logs, response, isListening, isSpeaking, liveTranscript, 
-  godMode, isAlert, isSeeThrough, onToggleSeeThrough, onCommand, 
+  godMode, isAlert, isSeeThrough, onToggleSeeThrough, autoScan, onToggleAutoScan, onCommand, 
   onToggleVoice, onToggleVault, onToggleHelp 
 }) {
   const [input, setInput] = useState('');
@@ -391,7 +391,16 @@ export default function HUDOverlay({
 
       {/* ── Right Sidebar ── */}
       <div className={`right-sidebar ${mobilePanel === 'systems' ? 'mobile-visible' : ''}`}>
-        <VisionFeed onAnalyze={onCommand} isSeeThrough={isSeeThrough} />
+        <VisionFeed onAnalyze={onCommand} isSeeThrough={isSeeThrough} autoScan={autoScan} />
+        <div className="glass-panel" style={{ marginBottom: '12px', padding: '8px' }}>
+          <button 
+            onClick={onToggleAutoScan} 
+            className={`cmd-btn ${autoScan ? 'active' : ''}`} 
+            style={{ width: '100%', fontSize: '10px', background: autoScan ? 'rgba(0, 212, 255, 0.1)' : 'transparent' }}
+          >
+            PROACTIVE PERCEPTION: {autoScan ? 'ON' : 'OFF'}
+          </button>
+        </div>
 
         {/* Multi-Agent Cluster Status */}
         {agentState === 'split' && (

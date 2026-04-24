@@ -2,10 +2,11 @@
 
 import { useRef, useEffect, useState } from 'react';
 
-export default function VisionFeed({ onAnalyze, isSeeThrough }) {
+export default function VisionFeed({ onAnalyze, isSeeThrough, autoScan = false }) {
   const videoRef = useRef(null);
   const [active, setActive] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const lastAutoScanRef = useRef(0);
 
   const startCamera = async () => {
     try {
@@ -19,9 +20,12 @@ export default function VisionFeed({ onAnalyze, isSeeThrough }) {
     }
   };
 
-  const captureFrame = () => {
+  const captureFrame = (isAuto = false) => {
     if (!videoRef.current || !onAnalyze) return;
+    if (isAuto && Date.now() - lastAutoScanRef.current < 60000) return; // Limit auto-scans to once per minute
+    
     setScanning(true);
+    if (isAuto) lastAutoScanRef.current = Date.now();
     
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
@@ -40,6 +44,14 @@ export default function VisionFeed({ onAnalyze, isSeeThrough }) {
 
   useEffect(() => {
     if (!active) return;
+
+    // Auto-scan logic
+    let scanIv;
+    if (autoScan) {
+      scanIv = setInterval(() => {
+        captureFrame(true);
+      }, 30000); // Check every 30s
+    }
 
     let watchId;
     if ("geolocation" in navigator) {
@@ -69,8 +81,9 @@ export default function VisionFeed({ onAnalyze, isSeeThrough }) {
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
       if (simIv) clearInterval(simIv);
+      if (scanIv) clearInterval(scanIv);
     };
-  }, [active]);
+  }, [active, autoScan]);
 
   return (
     <div className={`vision-feed-panel glass-panel ${isSeeThrough ? 'is-see-through' : ''}`} style={{ height: '220px', marginBottom: '12px', position: 'relative' }}>
