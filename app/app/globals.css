@@ -264,6 +264,10 @@ html, body {
 
 /* ── See Through (AR) Mode ── */
 .app-container.see-through {
+  background: transparent !important;
+}
+
+body:has(.see-through) {
   background: black;
 }
 
@@ -272,19 +276,29 @@ html, body {
   inset: 0;
   width: 100vw;
   height: 100vh !important;
-  z-index: 0;
+  z-index: -1; /* Place behind everything */
   margin: 0 !important;
   border: none;
   border-radius: 0;
-  background: transparent;
+  background: black;
+}
+
+.vision-feed-panel video {
+  filter: grayscale(1) contrast(1.2) brightness(0.8) sepia(0.3) hue-rotate(180deg);
+  opacity: 0.8;
+  transition: all 0.5s ease;
 }
 
 .app-container.see-through .vision-feed-panel.is-see-through video {
   height: 100vh !important;
-  opacity: 0.6; /* Balanced for readability and immersion */
+  opacity: 1; 
+  filter: none; /* Remove grayscale/sepia in AR mode for realism */
 }
 
-.app-container.see-through .hud-grid,
+.app-container.see-through .hud-grid {
+  display: none; /* Remove grid and dark radial overlay */
+}
+
 .app-container.see-through .canvas-wrapper {
   pointer-events: none;
 }

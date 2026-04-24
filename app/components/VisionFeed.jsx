@@ -8,6 +8,12 @@ export default function VisionFeed({ onAnalyze, isSeeThrough, autoScan = false }
   const [scanning, setScanning] = useState(false);
   const lastAutoScanRef = useRef(0);
 
+  useEffect(() => {
+    if (isSeeThrough && !active) {
+      startCamera();
+    }
+  }, [isSeeThrough, active]);
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -119,9 +125,7 @@ export default function VisionFeed({ onAnalyze, isSeeThrough, autoScan = false }
             style={{
               width: '100%',
               height: 'calc(100% - 40px)',
-              objectFit: 'cover',
-              filter: 'grayscale(1) contrast(1.2) brightness(0.8) sepia(0.3) hue-rotate(180deg)',
-              opacity: 0.8
+              objectFit: 'cover'
             }}
           />
           
