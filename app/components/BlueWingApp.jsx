@@ -9,7 +9,7 @@ import LoginOverlay from './LoginOverlay';
 import VaultBrowser from './VaultBrowser';
 import DiagnosticsOverlay from './DiagnosticsOverlay';
 import HelpModal from './HelpModal';
-import { commitToVault, getRecentHashes, account, resetSessionCache } from '../lib/appwrite';
+import { commitToVault, getRecentHashes } from '../lib/appwrite';
 import { startVapiSession, stopVapiSession } from '../lib/vapi';
 
 function generateHash() {
@@ -56,30 +56,21 @@ export default function BlueWingApp() {
 
   const now = () => new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  // System Boot Sequence
+  // System Boot Sequence — Local auth, no cloud dependency
   useEffect(() => {
+    if (!isAuthenticated) return;
     const boot = async () => {
-      try {
-        await account.get();
-        setIsAuthenticated(true);
-        
-        setAgentState('processing');
-        const recent = await getRecentHashes(1);
-        const lastHash = recent[0]?.hash || 'NONE';
-        const bootMsg = `Blue Wing Online. Last state: [${lastHash}]. System Nominal. Mission readiness: 100%.`;
-        
-        setResponse(bootMsg);
-        speak(bootMsg);
-        setLogs(prev => [{ id: 'BW-BOOT', type: 'system', message: bootMsg, time: now() }, ...prev]);
-        setAgentState('idle');
-        notifyRef.current?.add('System Boot', 'Blue Wing is online.', 'info');
-        setTimeout(() => setResponse(null), 5000);
-      } catch (err) {
-        setIsAuthenticated(false);
-      }
+      setAgentState('processing');
+      const bootMsg = `Blue Wing Online. System Nominal. Mission readiness: 100%.`;
+      setResponse(bootMsg);
+      speak(bootMsg);
+      setLogs(prev => [{ id: 'BW-BOOT', type: 'system', message: bootMsg, time: now() }, ...prev]);
+      setAgentState('idle');
+      notifyRef.current?.add('System Boot', 'Blue Wing is online.', 'info');
+      setTimeout(() => setResponse(null), 5000);
     };
     boot();
-  }, []);
+  }, [isAuthenticated]);
 
   // Track user interaction for audio autoplay policy
   const hasInteractedRef = useRef(false);
@@ -168,6 +159,52 @@ export default function BlueWingApp() {
   };
 
   const handleCommand = useCallback(async (cmd) => {
+    if (!cmd) return;
+
+    // ── File Analysis ──
+    if (typeof cmd === 'object' && cmd.type === 'file') {
+      const file = cmd.file;
+      setAgentState('processing');
+      setResponse(`Analyzing ${file.name}...`);
+      speak(`Analyzing your file, Sir.`);
+      
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Data = e.target.result.split(',')[1];
+        const mimeType = file.type;
+        
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              prompt: `Please analyze this file: ${file.name}`, 
+              persona,
+              file: {
+                data: base64Data,
+                mimeType: mimeType
+              }
+            }),
+          });
+          const data = await res.json();
+          setResponse(data.text);
+          speak(data.text);
+          setLogs(prev => [{ id: data.hash || generateHash(), type: 'response', message: data.text, time: now() }, ...prev]);
+        } catch (err) {
+          console.error("File processing failed:", err);
+          setResponse("File analysis failed.");
+          speak("Cognition layer failed to process the file.");
+        }
+        setAgentState('idle');
+      };
+      reader.onerror = () => {
+        setResponse("Failed to read file.");
+        setAgentState('idle');
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
     const trimmed = cmd.trim().toLowerCase();
     if (trimmed.includes('god mode')) {
       const newGodMode = !godMode;
@@ -332,6 +369,13 @@ export default function BlueWingApp() {
       setAgentState('processing');
       setLogs(prev => [{ id: generateHash(), type: 'command', message: `${isClose ? 'Closing' : 'Opening'}: ${target}`, time: now() }, ...prev].slice(0, 30));
 
+      // ── Popup Blocker Bypass ──
+      // We open a blank window immediately in the same event tick to avoid being blocked.
+      let newWindow = null;
+      if (!isClose && (openMatch || action === 'open')) {
+        newWindow = window.open('about:blank', '_blank');
+      }
+
       try {
         const res = await fetch('/api/launch', {
           method: 'POST',
@@ -340,8 +384,11 @@ export default function BlueWingApp() {
         });
         const data = await res.json();
 
-        if (data.type === 'web' && data.url && !isClose) {
-          window.open(data.url, '_blank');
+        if (data.type === 'web' && data.url && !isClose && newWindow) {
+          newWindow.location.href = data.url;
+        } else if (newWindow) {
+          // If it wasn't a web app or it failed, close the blank window
+          newWindow.close();
         }
 
         setResponse(data.text);
@@ -354,9 +401,11 @@ export default function BlueWingApp() {
         }, ...prev].slice(0, 30));
         notifyRef.current?.add(isClose ? 'App Closed' : 'App Launched', data.text, data.success ? 'info' : 'error');
       } catch (err) {
-        const msg = 'Launch protocol failed.';
+        console.error('Launch protocol failed:', err);
+        const msg = `Launch protocol failed: ${err.message}`;
         setResponse(msg);
-        speak(msg);
+        speak("Communication link failed.");
+        setLogs(prev => [{ id: generateHash(), type: 'error', message: msg, time: now() }, ...prev]);
       }
 
       setAgentState('idle');
@@ -470,7 +519,7 @@ export default function BlueWingApp() {
       speak(errorMsg);
       setTimeout(() => setResponse(null), 5000);
     }
-  }, []);
+  }, [godMode, isAlert, logs, persona, language, now]);
 
   const toggleVoice = useCallback(() => {
     // If currently listening, stop
@@ -661,7 +710,7 @@ export default function BlueWingApp() {
 
   return (
     <div className={`app-container ${agentState === 'sleeping' ? 'sleeping' : ''} ${godMode ? 'god-mode' : ''} ${isAlert ? 'alert-mode' : ''}`}>
-      {!isAuthenticated && <LoginOverlay onLogin={() => { resetSessionCache(); setIsAuthenticated(true); }} />}
+      {!isAuthenticated && <LoginOverlay onLogin={() => setIsAuthenticated(true)} />}
       {showVault && <VaultBrowser onClose={() => setShowVault(false)} onObserve={handleObserve} />}
       {showDiagnostics && <DiagnosticsOverlay onComplete={() => setShowDiagnostics(false)} />}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}

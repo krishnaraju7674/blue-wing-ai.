@@ -173,7 +173,9 @@ const WEB_APPS = {
   'gmail': 'https://mail.google.com',
   'outlook': 'https://outlook.live.com',
   'yahoo mail': 'https://mail.yahoo.com',
+  'whatsapp': 'https://web.whatsapp.com',
   'whatsapp web': 'https://web.whatsapp.com',
+  'telegram': 'https://web.telegram.org',
   'telegram web': 'https://web.telegram.org',
   'messenger': 'https://www.messenger.com',
   'discord': 'https://discord.com/app',
@@ -333,7 +335,8 @@ export async function POST(req) {
       const app = APPS[key];
       if (app && app.close) {
         return new Promise((resolve) => {
-          exec(app.close, { windowsHide: true }, (error) => {
+          exec(app.close, { windowsHide: true, shell: true }, (error) => {
+            if (error) console.warn(`Blue Wing: Close failed for ${key}:`, error.message);
             resolve(NextResponse.json({
               text: error ? `${app.name} not found.` : `${app.name} closed.`,
               hash: hash(), type: 'local', success: !error
@@ -343,7 +346,8 @@ export async function POST(req) {
       }
       // Try generic kill
       return new Promise((resolve) => {
-        exec(`taskkill /IM "${key}.exe" /F`, { windowsHide: true }, (error) => {
+        exec(`taskkill /IM "${key}.exe" /F`, { windowsHide: true, shell: true }, (error) => {
+          if (error) console.warn(`Blue Wing: Generic close failed for ${key}:`, error.message);
           resolve(NextResponse.json({
             text: error ? `Not found.` : `${key} closed.`,
             hash: hash(), type: 'local', success: !error
@@ -357,9 +361,21 @@ export async function POST(req) {
     const app = APPS[key];
     if (app) {
       return new Promise((resolve) => {
-        exec(app.open, { windowsHide: false }, (error) => {
+        // Use shell: true and process.cwd() for better compatibility
+        exec(app.open, { windowsHide: false, shell: true, cwd: process.cwd() }, (error) => {
+          if (error) {
+            console.error(`Blue Wing: Launch failed for ${key} (${app.open}):`, error.message);
+            // Fallback to web app if local fails
+            const webFallback = WEB_APPS[key];
+            if (webFallback) {
+              return resolve(NextResponse.json({ 
+                text: `${app.name} desktop not found. Opening web version.`, 
+                hash: hash(), type: 'web', url: webFallback, success: true 
+              }));
+            }
+          }
           resolve(NextResponse.json({
-            text: error ? `Not installed.` : `${app.name} opened.`,
+            text: error ? `${app.name} not detected. Try "open ${key} web".` : `${app.name} opened.`,
             hash: hash(), type: 'local', success: !error
           }));
         });
@@ -381,9 +397,10 @@ export async function POST(req) {
 
     // Try system launch
     return new Promise((resolve) => {
-      exec(`start ${key}`, { windowsHide: false }, (error) => {
+      exec(`start ${key}`, { windowsHide: false, shell: true, cwd: process.cwd() }, (error) => {
         if (error) {
-          resolve(NextResponse.json({ text: "Not found.", hash: hash(), type: 'error', success: false }));
+          console.error(`Blue Wing: System launch failed for ${key}:`, error.message);
+          resolve(NextResponse.json({ text: `"${key}" not found in system path.`, hash: hash(), type: 'error', success: false }));
         } else {
           resolve(NextResponse.json({ text: `${key} launched.`, hash: hash(), type: 'local', success: true }));
         }
@@ -391,6 +408,7 @@ export async function POST(req) {
     });
 
   } catch (error) {
-    return NextResponse.json({ text: "Launch failed.", hash: hash(), type: 'error', success: false }, { status: 500 });
+    console.error('Blue Wing: Launch API Error:', error);
+    return NextResponse.json({ text: "Launch protocol error.", hash: hash(), type: 'error', success: false }, { status: 500 });
   }
 }

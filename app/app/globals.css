@@ -145,6 +145,70 @@ html, body {
   padding: 16px;
 }
 
+/* ── Mobile Responsive ── */
+@media (max-width: 900px) {
+  .hud-overlay {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    padding: 8px;
+  }
+
+  .left-sidebar {
+    display: none !important;
+  }
+
+  .right-sidebar {
+    display: none !important;
+  }
+
+  .top-bar {
+    padding: 8px 12px;
+  }
+
+  .logo-title {
+    font-size: 11px;
+    letter-spacing: 4px;
+  }
+
+  .logo-subtitle {
+    font-size: 7px;
+    letter-spacing: 3px;
+  }
+
+  .bottom-bar {
+    padding: 4px 0 0;
+  }
+
+  .command-bar {
+    max-width: 100%;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .cmd-input {
+    font-size: 14px;
+  }
+
+  .response-bubble {
+    font-size: 12px;
+    padding: 10px 14px;
+    max-width: calc(100vw - 32px);
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-title {
+    font-size: 9px;
+    letter-spacing: 3px;
+  }
+
+  .cmd-btn {
+    font-size: 8px;
+    padding: 4px 8px;
+  }
+}
+
+
 /* ── Top Bar ── */
 .top-bar {
   grid-column: 1 / -1;
@@ -153,6 +217,7 @@ html, body {
   justify-content: center;
   padding: 12px 24px;
   animation: fade-in-up 1s ease;
+  pointer-events: auto; /* Enable clicking top bar buttons */
 }
 
 .top-bar-inner {
@@ -336,6 +401,7 @@ html, body {
   gap: 12px;
   max-height: calc(100vh - 160px);
   animation: slide-in-right 0.8s ease;
+  pointer-events: auto; /* Enable clicking sidebar elements */
 }
 
 .status-list {

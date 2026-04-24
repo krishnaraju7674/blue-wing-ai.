@@ -490,14 +490,37 @@ export default function HUDOverlay({ agentState, logs, response, isListening, is
           <div style={{ margin: '0 10px', display: 'flex', alignItems: 'center' }}>
             <Waveform agentState={agentState} isSpeaking={isSpeaking} />
           </div>
-          <button
-            type="button"
-            className={`mic-btn ${isListening ? 'active' : ''}`}
-            onClick={onToggleVoice}
-            title={isListening ? 'Stop Listening' : 'Start Voice Control (Alt+M)'}
-          >
-            {isListening ? '🔴' : '🎙'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '10px' }}>
+            <button
+              type="button"
+              className="mic-btn"
+              onClick={() => document.getElementById('file-upload').click()}
+              title="Attach File for Analysis"
+              style={{ padding: '0 8px' }}
+            >
+              📎
+            </button>
+            <input 
+              id="file-upload" 
+              type="file" 
+              style={{ display: 'none' }} 
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file && onCommand) {
+                  onCommand({ type: 'file', file });
+                }
+                e.target.value = ''; // Reset for next selection
+              }}
+            />
+            <button
+              type="button"
+              className={`mic-btn ${isListening ? 'active' : ''}`}
+              onClick={onToggleVoice}
+              title={isListening ? 'Stop Listening' : 'Start Voice Control (Alt+M)'}
+            >
+              {isListening ? '🔴' : '🎙'}
+            </button>
+          </div>
           {isListening && (
             <span style={{ 
               fontSize: '8px', 

@@ -1,0 +1,33 @@
+{
+  "name": "Blue Wing — Sovereign AI OS",
+  "short_name": "Blue Wing",
+  "description": "Sovereign Agentic AI Operating System built by Krishna",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030612",
+  "theme_color": "#0096ff",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Open Blue Wing",
+      "short_name": "Launch",
+      "description": "Launch Blue Wing AI OS",
+      "url": "/"
+    }
+  ]
+}
